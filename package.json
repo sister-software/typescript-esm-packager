@@ -1,0 +1,74 @@
+{
+  "name": "@sister.software/ts-path-transformer",
+  "version": "1.0.0",
+  "description": "TypeScript AST Transformer to rewrite any imported or exported paths.",
+  "repository": "git@github.com:sister-software/config.git",
+  "bugs": {
+    "url": "https://github.com/sister-software/ts-path-transformer/issues"
+  },
+  "author": "Teffen Ellis <teffen@sister.software>",
+  "license": "MIT",
+  "main": "./dist/mod.mjs",
+  "module": "./dist/mod.mjs",
+  "types": "./dist/mod.d.mts",
+  "files": [
+    "dist/**/*"
+  ],
+  "keywords": [
+    "typescript",
+    "transformer",
+    "ast",
+    "path",
+    "rewrite",
+    "esm",
+    "module"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/mod.mjs",
+      "types": "./dist/mod.d.mts"
+    },
+    "./mod": {
+      "import": "./dist/mod.mjs",
+      "types": "./dist/mod.d.mts"
+    },
+    "./mod.mjs": {
+      "import": "./dist/mod.mjs",
+      "types": "./dist/mod.d.mts"
+    },
+    "./package.json": "./package.json"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "node --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./build.mts"
+  },
+  "devDependencies": {
+    "@sister.software/eslint-config": "^2.0.0",
+    "@sister.software/prettier-config": "^2.0.0",
+    "@types/node": "^18.15.10",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-header": "^3.1.1",
+    "prettier": "^2.8.7",
+    "prettier-plugin-organize-imports": "^3.2.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2"
+  },
+  "engines": {
+    "node": ">=16.14"
+  },
+  "prettier": "@sister.software/prettier-config",
+  "eslintConfig": {
+    "extends": [
+      "@sister.software/eslint-config"
+    ],
+    "ignorePatterns": [
+      "dist",
+      "results",
+      "node_modules",
+      "test/fixtures"
+    ]
+  }
+}
