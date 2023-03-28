@@ -151,9 +151,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sister.software/eslint-config@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@sister.software/eslint-config@npm:2.0.0"
+"@sister.software/eslint-config@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@sister.software/eslint-config@npm:2.0.1"
   dependencies:
     "@typescript-eslint/eslint-plugin": ^5.57.0
     "@typescript-eslint/parser": ^5.57.0
@@ -166,18 +166,18 @@ __metadata:
     prettier: ">=2.8"
     prettier-plugin-organize-imports: ">=3.2"
     typescript: ">=5"
-  checksum: 912ebc56cf7014e02a04bc3b84e899d00d2054b60c2eb2362d5bba63bd3ef5c7d39ed0875bb13b2abdc965732c0b9efc812c79d219a4a77bd0e0e13ab53667ea
+  checksum: f658f1bd77181e9245a3c2e8746ed5314941aba33b697423f70e0fb366dd9420b1819240fdfc143300033a6abc9f85fda82211248d75bcc262b25d5effa29246
   languageName: node
   linkType: hard
 
-"@sister.software/prettier-config@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@sister.software/prettier-config@npm:2.0.0"
+"@sister.software/prettier-config@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@sister.software/prettier-config@npm:2.0.1"
   peerDependencies:
     prettier: ">=2.8"
     prettier-plugin-organize-imports: ">=3.2"
     typescript: ">=5"
-  checksum: b7f4b2fa065525d4cba3fe146a535ecc38401156c81b8416bbccfdcb1cf1c4b16dbf69b5f1bcf669e906456cd2c8f329412807ac505816a58e87d4f39188407c
+  checksum: 08e26281d5d588342654ab0d2aa9627a4e72962659c6bd4eedf849727664ec3e4b7bca895346c6f20243c26f618c5cbe6e7ab90640389b533e165438e267d0b2
   languageName: node
   linkType: hard
 
@@ -185,9 +185,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@sister.software/ts-path-transformer@workspace:."
   dependencies:
-    "@sister.software/eslint-config": ^2.0.0
-    "@sister.software/prettier-config": ^2.0.0
+    "@sister.software/eslint-config": ^2.0.1
+    "@sister.software/prettier-config": ^2.0.1
     "@types/node": ^18.15.10
+    "@types/prettier": ^2.7.2
     "@typescript-eslint/eslint-plugin": ^5.57.0
     "@typescript-eslint/parser": ^5.57.0
     eslint: ^8.36.0
@@ -199,6 +200,11 @@ __metadata:
     typescript: ^5.0.2
   peerDependencies:
     typescript: ">=5"
+  dependenciesMeta:
+    "@sister.software/prettier-config":
+      optional: true
+    prettier:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -241,6 +247,13 @@ __metadata:
   version: 18.15.11
   resolution: "@types/node@npm:18.15.11"
   checksum: 977b4ad04708897ff0eb049ecf82246d210939c82461922d20f7d2dcfd81bbc661582ba3af28869210f7e8b1934529dcd46bff7d448551400f9d48b9d3bddec3
+  languageName: node
+  linkType: hard
+
+"@types/prettier@npm:^2.7.2":
+  version: 2.7.2
+  resolution: "@types/prettier@npm:2.7.2"
+  checksum: b47d76a5252265f8d25dd2fe2a5a61dc43ba0e6a96ffdd00c594cb4fd74c1982c2e346497e3472805d97915407a09423804cc2110a0b8e1b22cffcab246479b7
   languageName: node
   linkType: hard
 

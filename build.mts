@@ -9,6 +9,7 @@ import * as path from 'node:path'
 import ts from 'typescript'
 
 import { cleanDir, readParsedTSConfig } from './compiler.mjs'
+import { createDefaultPrettierFormatter } from './formatter.mjs'
 import { TSPathTransformer } from './transformers.mjs'
 
 const watching = process.argv.includes('--watch')
@@ -25,10 +26,14 @@ const compilerOptions: ts.CompilerOptions = {
   emitDeclarationOnly: false,
 }
 
-const transformer = new TSPathTransformer({
-  '.d.mts': /\.d\.mts$/gi,
-  '.mjs': /\.m?tsx?$/gi,
-})
+const formatter = await createDefaultPrettierFormatter()
+const transformer = new TSPathTransformer(
+  {
+    '.d.mts': /\.d\.mts$/gi,
+    '.mjs': /\.m?tsx?$/gi,
+  },
+  formatter
+)
 
 if (watching) {
   const watchHost = ts.createWatchCompilerHost(
