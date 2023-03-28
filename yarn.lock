@@ -181,12 +181,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sister.software/ts-path-transformer@workspace:.":
+"@sister.software/ts-path-transformer@^1.0.0, @sister.software/ts-path-transformer@workspace:.":
   version: 0.0.0-use.local
   resolution: "@sister.software/ts-path-transformer@workspace:."
   dependencies:
     "@sister.software/eslint-config": ^2.0.0
     "@sister.software/prettier-config": ^2.0.0
+    "@sister.software/ts-path-transformer": ^1.0.0
     "@types/node": ^18.15.10
     "@typescript-eslint/eslint-plugin": ^5.57.0
     "@typescript-eslint/parser": ^5.57.0
@@ -197,6 +198,8 @@ __metadata:
     prettier-plugin-organize-imports: ^3.2.2
     ts-node: ^10.9.1
     typescript: ^5.0.2
+  peerDependencies:
+    typescript: ">=5"
   languageName: unknown
   linkType: soft
 
