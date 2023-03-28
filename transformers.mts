@@ -6,8 +6,8 @@
  */
 
 import ts from 'typescript'
-import { PathRewriterFn, PathRewriterRecord, _rewriteImportPath } from './common.mjs'
-import { importExportVisitor } from './visitor.mjs'
+import { PathRewriterFn, PathRewriterRecord, _rewriteImportPath } from './common.mts'
+import { importExportVisitor } from './visitor.mts'
 
 /**
  * AST Transformer to rewrite any imported or exported paths.

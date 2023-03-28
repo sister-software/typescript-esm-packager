@@ -5,7 +5,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-export * from './common.mjs'
-export * from './compiler.mjs'
-export * from './transformers.mjs'
-export * from './visitor.mjs'
+export * from './common.mts'
+export * from './compiler.mts'
+export * from './transformers.mts'
+export * from './visitor.mts'

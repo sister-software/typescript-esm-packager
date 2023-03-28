@@ -6,7 +6,7 @@
  */
 
 import ts from 'typescript'
-import { PathRewriterFn, PathRewriterRecord, _rewriteImportPath } from './common.mjs'
+import { PathRewriterFn, PathRewriterRecord, _rewriteImportPath } from './common.mts'
 
 /**
  * @internal
