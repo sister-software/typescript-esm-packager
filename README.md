@@ -47,6 +47,7 @@ const compilerOptions: ts.CompilerOptions = {
 
 // Create a transformer that rewrites '.mts' files to '.mjs' files...
 const transformer = new TSPathTransformer({
+  '.d.mts': /\.d\.mts$/gi,
   '.mjs': /\.m?tsx?$/gi,
 })
 

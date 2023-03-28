@@ -26,6 +26,7 @@ const compilerOptions: ts.CompilerOptions = {
 }
 
 const transformer = new TSPathTransformer({
+  '.d.mts': /\.d\.mts$/gi,
   '.mjs': /\.m?tsx?$/gi,
 })
 
