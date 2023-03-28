@@ -41,7 +41,7 @@
   "type": "module",
   "scripts": {
     "build": "node --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./build.mts",
-    "release": "release-it"
+    "release": "yarn run build && yarn run release-it"
   },
   "devDependencies": {
     "@sister.software/eslint-config": "^2.0.1",
