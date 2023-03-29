@@ -27,11 +27,20 @@ export async function createDefaultPrettierFormatter(
   prettierOverrides: Partial<PrettierOptions> = {}
 ): Promise<WriteFileFormatter> {
   const prettier = await import('prettier')
-  const config = await import('@sister.software/prettier-config')
+
+  let sisterSoftwareConfig: PrettierOptions
+
+  try {
+    const configPkg = await import('@sister.software/prettier-config')
+    sisterSoftwareConfig = configPkg.default
+  } catch (error) {
+    console.debug('Could not load @sister.software/prettier-config. Using default Prettier options.')
+    sisterSoftwareConfig = {}
+  }
 
   const prettierOptions: PrettierOptions = {
     parser: 'typescript',
-    ...config,
+    ...sisterSoftwareConfig,
     ...prettierOverrides,
   }
 
