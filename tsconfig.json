@@ -23,10 +23,13 @@
 
   },
   "include": [
-    "mod.mts"
+    "./**/*.ts",
+    "./**/*.mts",
+    "./**/*.tsx",
+    "types/*.d.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
   ]
 }

@@ -7,7 +7,6 @@
 
 import ts from 'typescript'
 import { PathRewriterFn, PathRewriterRecord, _rewriteImportPath } from './common.mts'
-import { WriteFileFormatter, writeFileIdentityFormatter } from './formatter.mts'
 import { importExportVisitor } from './visitor.mts'
 
 /**
@@ -16,21 +15,19 @@ import { importExportVisitor } from './visitor.mts'
  * or to rewrite imports to a different file extension.
  */
 export class TSPathTransformer {
-  constructor(
-    public rewriter: PathRewriterFn | PathRewriterRecord,
-    public formatter: WriteFileFormatter = writeFileIdentityFormatter
-  ) {}
+  constructor(public rewriter: PathRewriterFn | PathRewriterRecord) {}
 
   /**
-   * Wrapper around TypeScript's default `writeFile` function.
-   * Automatically applies path transformations to the file name.
+   * Rewrite the file names of the given source files.
+   *
+   * ```ts
+   * transformer.rewriteSourceFiles(program.getSourceFiles())
+   * ```
    */
-  writeFileCallback: ts.WriteFileCallback = (fileName, fileContents, writeByteOrderMark) => {
-    const nextFileName = _rewriteImportPath({ importPath: fileName, rewriter: this.rewriter })
-
-    const formattedFileContents = this.formatter(fileContents, fileName, nextFileName)
-
-    ts.sys.writeFile(nextFileName, formattedFileContents, writeByteOrderMark)
+  public rewriteSourceFiles(sourceFiles: readonly ts.SourceFile[]) {
+    for (const sourceFile of sourceFiles) {
+      sourceFile.fileName = _rewriteImportPath({ importPath: sourceFile.fileName, rewriter: this.rewriter })
+    }
   }
 
   /**

@@ -40,7 +40,7 @@
   },
   "type": "module",
   "scripts": {
-    "build": "node --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./build.mts",
+    "build": "node --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./_build.mts",
     "release": "yarn run build && yarn run release-it"
   },
   "devDependencies": {

@@ -23,50 +23,56 @@ npm install --save @sister.software/ts-path-transformer
 
 ## Usage
 
-Ironically, this package actually uses itself to rewrite its own source code. You can find a more detailed example in the repo's build script.
+Ironically, this package actually uses itself to rewrite its own source code. You can find a more detailed example in this repo's own build script.
 
 Here's a quick example of how to use this package to rewrite '.mts' files to '.mjs' files:
 
 ```ts
-import { readParsedTSConfig, TSPathTransformer } from '@sister.software/ts-path-transformer'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import {
+  SimpleProgramConfig,
+  TSPathTransformer,
+  cleanTSBuildDirectory,
+  createDefaultPrettierFormatter,
+  createSimpleTSProgram,
+  createSimpleTSProgramWithWatcher,
+  readParsedTSConfig,
+} from '@sister.software/ts-path-transformer'
 
 // ESM modules don't have __dirname, so we have to use import.meta.url...
-const __dirname = new URL('.', import.meta.url).pathname
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Load the tsconfig.json file...
-// This function is just a wrapper around TypeScript's `ts.readConfigFile` function...
-const tsConfig = readParsedTSConfig(path.join(__dirname, 'tsconfig.json'))
-
-// As of TypeScript 5, we can only use module extensions in imports and exports,
-// if the compiler option `emitDeclarationOnly` is set to `true`.
-// So we turn it off for the duration of the emit...
-const compilerOptions: ts.CompilerOptions = {
-  ...tsConfig.options,
-  emitDeclarationOnly: false,
+const programConfig: SimpleProgramConfig = {
+  // Load the tsconfig.json file...
+  // This function is just a wrapper around TypeScript's `ts.readConfigFile` function...
+  tsConfig: readParsedTSConfig(path.join(__dirname, 'tsconfig.json')),
+  // Create a transformer that...
+  transformer: new TSPathTransformer({
+    //...Keeps declarations as '.d.mts' files:
+    '.d.mts': /\.d\.mts$/gi,
+    //...And rewrites '.mts' files to '.mjs' files:
+    '.mjs': /\.m?tsx?$/gi,
+  }),
+  // Just for fun, we'll also format the output files with Prettier...
+  formatter: await createDefaultPrettierFormatter(),
 }
 
-// Create a transformer that rewrites '.mts' files to '.mjs' files...
-const transformer = new TSPathTransformer({
-  '.d.mts': /\.d\.mts$/gi,
-  '.mjs': /\.m?tsx?$/gi,
-})
+// Clear out any previous builds...
+await cleanTSBuildDirectory(programConfig.tsConfig)
 
-// Standard TypeScript boilerplate goes here...
-const program = ts.createProgram({
-  host: ts.createCompilerHost(tsConfig.options, true),
-  options: compilerOptions,
-  rootNames: tsConfig.fileNames,
-})
+const watch = process.argv.includes('--watch')
 
-// Finally, we emit the files...
-program.emit(
-  undefined,
-  transformer.writeFileCallback, // We emit the files after they're transformed...
-  undefined,
-  undefined,
-  // We pass the transformer to the compiler...
-  transformer.asCustomTransformers()
-)
+if (watch) {
+  // Create a program that watches for changes and re-emits the files...
+  createSimpleTSProgramWithWatcher(programConfig)
+} else {
+  // Or, create a program that emits the files once...
+  const program = createSimpleTSProgram(programConfig)
+
+  program.emitWithTransformer()
+}
 ```
 
 Your build directory should now contain `.mjs` files instead of `.mts` files!

@@ -6,9 +6,8 @@
  */
 
 import type { Options as PrettierOptions } from 'prettier'
+import ts from 'typescript'
 
-export type WriteFileFormatter = (fileContents: string, previousFileName: string, rewrittenFileName: string) => string
-export const writeFileIdentityFormatter: WriteFileFormatter = (fileContents) => fileContents
 /**
  * A collection of regular expressions that match TypeScript-related file extensions.
  */
@@ -23,9 +22,13 @@ export function isFormattable(filePath: string): boolean {
   return FileExtensionPatterns.JavaScript.test(filePath) || FileExtensionPatterns.TypeScriptDeclaration.test(filePath)
 }
 
+/**
+ * Creates a formatter that uses Prettier to format the file contents.
+ * This is convenience wrapper around TypeScript's default `ts.sys.writeFile` function.
+ */
 export async function createDefaultPrettierFormatter(
   prettierOverrides: Partial<PrettierOptions> = {}
-): Promise<WriteFileFormatter> {
+): Promise<ts.WriteFileCallback> {
   const prettier = await import('prettier')
 
   let sisterSoftwareConfig: PrettierOptions
@@ -44,11 +47,11 @@ export async function createDefaultPrettierFormatter(
     ...prettierOverrides,
   }
 
-  return (fileContents, previousFileName) => {
-    if (!isFormattable(previousFileName)) {
-      return fileContents
-    }
+  const formatter: ts.WriteFileCallback = (fileName, fileContents, writeByteOrderMark) => {
+    const formattedContents = isFormattable(fileName) ? prettier.format(fileContents, prettierOptions) : fileContents
 
-    return prettier.format(fileContents, prettierOptions)
+    ts.sys.writeFile(fileName, formattedContents, writeByteOrderMark)
   }
+
+  return formatter
 }
