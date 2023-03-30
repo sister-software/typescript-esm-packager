@@ -123,6 +123,7 @@ export function createSimpleTSProgramWithWatcher({
   )
 
   watchHost.afterProgramCreate = (builderProgram) => {
+    transformer?.rewriteSourceFiles(builderProgram.getSourceFiles())
     builderProgram.emit(undefined, formatter, undefined, undefined, transformer?.asCustomTransformers())
   }
 
