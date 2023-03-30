@@ -405,6 +405,8 @@ __metadata:
       optional: true
     prettier:
       optional: true
+    prettier-plugin-organize-imports:
+      optional: true
   languageName: unknown
   linkType: soft
 
