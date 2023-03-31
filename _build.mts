@@ -12,10 +12,11 @@ import {
   SimpleProgramConfig,
   TSPathTransformer,
   cleanTSBuildDirectory,
-  createDefaultPrettierFormatter,
+  createPrettierWriteFileCallback,
   createSimpleTSProgram,
   createSimpleTSProgramWithWatcher,
   readParsedTSConfig,
+  reportDiagnostic,
 } from './mod.mjs'
 
 // ESM modules don't have __dirname, so we have to use import.meta.url...
@@ -27,13 +28,11 @@ const programConfig: SimpleProgramConfig = {
   tsConfig: readParsedTSConfig(path.join(__dirname, 'tsconfig.json')),
   // Create a transformer that...
   transformer: new TSPathTransformer({
-    //...Keeps declarations as '.d.mts' files:
-    '.d.mts': /\.d\.mts$/gi,
-    //...And rewrites '.mts' files to '.mjs' files:
+    // Rewrite '.mts' files to '.mjs' files:
     '.mjs': /\.m?tsx?$/gi,
   }),
   // Just for fun, we'll also format the output files with Prettier...
-  formatter: await createDefaultPrettierFormatter(),
+  writeFileCallback: await createPrettierWriteFileCallback(),
 }
 
 // Clear out any previous builds...
@@ -48,5 +47,9 @@ if (watch) {
   // Or, create a program that emits the files once...
   const program = createSimpleTSProgram(programConfig)
 
-  program.emitWithTransformer()
+  const emitResult = program.emitWithTransformer()
+
+  for (const diagnostic of emitResult.diagnostics) {
+    reportDiagnostic(diagnostic)
+  }
 }

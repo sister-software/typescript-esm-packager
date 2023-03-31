@@ -31,7 +31,10 @@ export function readParsedTSConfig(
 ): ts.ParsedCommandLine {
   const tsConfig = ts.readConfigFile(pathToTSConfig, ts.sys.readFile)
 
-  return ts.parseJsonConfigFileContent(tsConfig.config, configHostParser, resolve(dirname(pathToTSConfig)))
+  const parsedCLI = ts.parseJsonConfigFileContent(tsConfig.config, configHostParser, resolve(dirname(pathToTSConfig)))
+  parsedCLI.options.configFilePath = pathToTSConfig
+
+  return parsedCLI
 }
 
 /**
@@ -67,6 +70,13 @@ const formatHost: ts.FormatDiagnosticsHost = {
 }
 
 export function reportDiagnostic(diagnostic: ts.Diagnostic) {
+  if (diagnostic.code === 5096) {
+    // "Option 'allowImportingTsExtensions' can only be used when either 'noEmit' or 'emitDeclarationOnly' is set."
+    // This can be ignored, since we're overriding the emit function.
+    console.log('Diagnostic suppressed:', diagnostic.code, '(allowImportingTsExtensions)')
+    return
+  }
+
   console.error(
     'Error',
     diagnostic.code,
@@ -95,7 +105,55 @@ export type WithTransformerEmit<T> = T & {
 export interface SimpleProgramConfig {
   tsConfig: ts.ParsedCommandLine
   transformer?: TSPathTransformer
-  formatter?: ts.WriteFileCallback
+  writeFileCallback?: ts.WriteFileCallback
+}
+
+/**
+ * See `getSingleOutputFileNames` in `node_modules/typescript/lib/typescript.js`
+ */
+export type OutputFileNameResult = readonly [
+  /** The output file name */
+  string,
+  /** The source map file name */
+  string,
+  /** The type declaration file name */
+  string
+]
+
+export type FileNameMap = Map<
+  /** The original source file name */
+  string,
+  OutputFileNameResult
+>
+
+/**
+ * Creates a file name mapping used to rewrite the output file names.
+ */
+export function _createFileNameMap(tsConfig: ts.ParsedCommandLine, transformer?: TSPathTransformer) {
+  const fileNameRewriteMap = new Map<string, string>()
+
+  if (!transformer) return fileNameRewriteMap
+
+  for (const originalFileName of tsConfig.fileNames) {
+    const transformedFileName = transformer.rewriteFilePath(originalFileName)
+    const isMJS = transformedFileName.endsWith('.mjs')
+
+    if (isMJS) {
+      const outputNames = ts.getOutputFileNames(tsConfig, originalFileName, ts.sys.useCaseSensitiveFileNames)
+
+      for (const outputName of outputNames) {
+        fileNameRewriteMap.set(
+          outputName,
+          outputName
+            //
+            .replace('.d.ts', '.d.mjs')
+            .replace('.js', '.mjs')
+        )
+      }
+    }
+  }
+
+  return fileNameRewriteMap
 }
 
 /**
@@ -108,26 +166,43 @@ export interface SimpleProgramConfig {
 export function createSimpleTSProgramWithWatcher({
   tsConfig,
   transformer,
-  formatter = ts.sys.writeFile,
+  writeFileCallback = ts.sys.writeFile,
 }: SimpleProgramConfig) {
-  const watchHost = ts.createWatchCompilerHost(
+  const compilerOptions: ts.CompilerOptions = {
+    ...tsConfig.options,
+    emitDeclarationOnly: false,
+  }
+
+  const host = ts.createWatchCompilerHost(
     tsConfig.fileNames,
-    {
-      ...tsConfig.options,
-      emitDeclarationOnly: false,
-    },
+    compilerOptions,
     ts.sys,
     ts.createEmitAndSemanticDiagnosticsBuilderProgram,
     reportDiagnostic,
-    reportWatchStatusChanged
+    reportWatchStatusChanged,
+    tsConfig.projectReferences
   )
 
-  watchHost.afterProgramCreate = (builderProgram) => {
-    transformer?.rewriteSourceFiles(builderProgram.getSourceFiles())
-    builderProgram.emit(undefined, formatter, undefined, undefined, transformer?.asCustomTransformers())
+  const fileNameRewriteMap = _createFileNameMap(tsConfig, transformer)
+  const originalPostProgramCreate = host.afterProgramCreate
+
+  host.afterProgramCreate = (builderProgram) => {
+    builderProgram.emit(
+      undefined,
+      (fileName, text, writeByteOrderMark) => {
+        const nextFileName = fileNameRewriteMap.get(fileName) ?? fileName
+
+        return writeFileCallback(nextFileName, text, writeByteOrderMark)
+      },
+      undefined,
+      undefined,
+      transformer?.asCustomTransformers()
+    )
+
+    originalPostProgramCreate!(builderProgram)
   }
 
-  const watchProgram = ts.createWatchProgram(watchHost)
+  const watchProgram = ts.createWatchProgram(host)
 
   return watchProgram
 }
@@ -139,24 +214,40 @@ export function createSimpleTSProgramWithWatcher({
  *
  * @see {@linkcode createSimpleTSProgramWithWatcher} for a watching compiler.
  */
-export function createSimpleTSProgram({ tsConfig, transformer, formatter = ts.sys.writeFile }: SimpleProgramConfig) {
+export function createSimpleTSProgram({
+  tsConfig,
+  transformer,
+  writeFileCallback = ts.sys.writeFile,
+}: SimpleProgramConfig) {
+  const compilerOptions: ts.CompilerOptions = {
+    ...tsConfig.options,
+    // As of TypeScript 5, we can only use module extensions in imports and exports,
+    // if the compiler option `emitDeclarationOnly` is set to `true`.
+    // So we turn it off for the duration of the emit...
+    emitDeclarationOnly: false,
+  }
+
   const program = ts.createProgram({
     host: ts.createCompilerHost(tsConfig.options, true),
-    options: {
-      ...tsConfig.options,
-      // As of TypeScript 5, we can only use module extensions in imports and exports,
-      // if the compiler option `emitDeclarationOnly` is set to `true`.
-      // So we turn it off for the duration of the emit...
-      emitDeclarationOnly: false,
-    },
+    options: compilerOptions,
     rootNames: tsConfig.fileNames,
   })
 
-  transformer?.rewriteSourceFiles(program.getSourceFiles())
+  const fileNameRewriteMap = _createFileNameMap(tsConfig, transformer)
 
   const mixedProgram: WithTransformerEmit<typeof program> = Object.assign(program, {
     emitWithTransformer: () =>
-      program.emit(undefined, formatter, undefined, undefined, transformer?.asCustomTransformers()),
+      program.emit(
+        undefined,
+        (fileName, text, writeByteOrderMark) => {
+          const nextFileName = fileNameRewriteMap.get(fileName) ?? fileName
+
+          return writeFileCallback(nextFileName, text, writeByteOrderMark)
+        },
+        undefined,
+        undefined,
+        transformer?.asCustomTransformers()
+      ),
   })
 
   return mixedProgram

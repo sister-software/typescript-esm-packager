@@ -23,10 +23,11 @@ export function isFormattable(filePath: string): boolean {
 }
 
 /**
- * Creates a formatter that uses Prettier to format the file contents.
+ * Creates a TypeScript `writeFileCallback` that uses Prettier to format the file contents.
  * This is convenience wrapper around TypeScript's default `ts.sys.writeFile` function.
+ * @see {@linkcode ts.sys.writeFile}
  */
-export async function createDefaultPrettierFormatter(
+export async function createPrettierWriteFileCallback(
   prettierOverrides: Partial<PrettierOptions> = {}
 ): Promise<ts.WriteFileCallback> {
   const prettier = await import('prettier')

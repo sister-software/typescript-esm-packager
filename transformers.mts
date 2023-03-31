@@ -18,6 +18,17 @@ export class TSPathTransformer {
   constructor(public rewriter: PathRewriterFn | PathRewriterRecord) {}
 
   /**
+   * Rewrite a single file path.
+   *
+   * ```ts
+   * transformer.rewriteFilePath(filePath)
+   * ```
+   */
+  public rewriteFilePath(filePath: string) {
+    return _rewriteImportPath({ importPath: filePath, rewriter: this.rewriter })
+  }
+
+  /**
    * Rewrite the file names of the given source files.
    *
    * ```ts
@@ -26,7 +37,7 @@ export class TSPathTransformer {
    */
   public rewriteSourceFiles(sourceFiles: readonly ts.SourceFile[]) {
     for (const sourceFile of sourceFiles) {
-      sourceFile.fileName = _rewriteImportPath({ importPath: sourceFile.fileName, rewriter: this.rewriter })
+      sourceFile.fileName = this.rewriteFilePath(sourceFile.fileName)
     }
   }
 
