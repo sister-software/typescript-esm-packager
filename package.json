@@ -4,7 +4,7 @@
   "description": "A collection of tools to build ESM packages with TypeScript.",
   "repository": "git@github.com:sister-software/config.git",
   "bugs": {
-    "url": "https://github.com/sister-software/typescript-packager/issues"
+    "url": "https://github.com/sister-software/typescript-esm-packager/issues"
   },
   "author": "Teffen Ellis <teffen@sister.software>",
   "license": "MIT",
