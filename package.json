@@ -2,7 +2,8 @@
   "name": "@sister.software/typescript-esm-packager",
   "version": "1.2.5",
   "description": "A collection of tools to build ESM packages with TypeScript.",
-  "repository": "git@github.com:sister-software/config.git",
+  "repository": "git@github.com:sister-software/typescript-esm-packager.git",
+  "homepage": "https://github.com/sister-software/typescript-esm-packager#readme",
   "bugs": {
     "url": "https://github.com/sister-software/typescript-esm-packager/issues"
   },
