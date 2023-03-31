@@ -28,7 +28,9 @@ const programConfig: SimpleProgramConfig = {
   tsConfig: readParsedTSConfig(path.join(__dirname, 'tsconfig.json')),
   // Create a transformer that...
   transformer: new TSPathTransformer({
-    // Rewrite '.mts' files to '.mjs' files:
+    //...Rewrites '.d.ts' to '.d.mts'
+    '.d.mts': /\.d\.ts$/gi,
+    //...Rewrites '.ts', '.mts', and '.tsx' files to '.mjs' files:
     '.mjs': /\.m?tsx?$/gi,
   }),
   // Just for fun, we'll also format the output files with Prettier...

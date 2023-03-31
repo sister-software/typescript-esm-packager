@@ -83,7 +83,7 @@ A well formed NPM package should be able to be used in the browser with little t
 Some of Node's built in modules, such as `fs`, do not have browser equivalents.
 That's okay, but you should separate these exports into their own module so that your users can import them separately:
 
-```ts
+```js
 // file-loaders/node.mjs
 
 // Prefix with `node:` to clue users in that this is a Node-specific module.
@@ -96,7 +96,7 @@ export function loadSomeFile() {
 }
 ```
 
-```ts
+```js
 // file-loaders/browser.mjs
 
 export function loadSomeFile() {
@@ -122,7 +122,7 @@ Let your users bring a bundler if they want to take advantage of tree-shaking, m
 
 This is less important than the other points, but it's place of confusion for a lot of developers. Deno uses ESM modules, however it largely ignores the package.json config for a import-map approach. It's honestly a bit of a mess, but here's the important part:
 
-```ts
+```js
 import { foo } from 'https://deno.land/x/my-awesome-package/mod.mts'
 import { someLocalFile } from './some-local-file.mts'
 import { SomeReactComponent } from './some-local-file.tsx'
@@ -136,7 +136,7 @@ Your project's `tsconfig.json` defines how TypeScript _compiles_ your code. It d
 
 This means that your only option was to either omit file extensions on your imports and exports, or set `module: "esnext"` in your `tsconfig.json` file:
 
-```ts
+```js
 // Meanwhile, in mod.mts...
 import { someLocalFile } from './some-local-file.mjs' // WTF???
 import { SomeReactComponent } from './some-local-file' // Why no file extension?
