@@ -19,14 +19,6 @@ export type PathRewriterFn = (
   sourceFilePath?: string
 ) => string
 
-/**
- * A map of aliases to regular expressions. If the import path matches the
- * regular expression, the alias will be used to rewrite the import path.
- */
-export interface PathRewriterRecord {
-  [alias: string]: RegExp
-}
-
 export interface _RewriteFnArgs {
   importPath: string
   sourceFilePath?: string
@@ -36,6 +28,14 @@ export interface _RewriteFnArgs {
    * or a map of aliases to regular expressions.
    */
   rewriter: PathRewriterFn | PathRewriterRecord
+}
+
+/**
+ * A map of aliases to regular expressions. If the import path matches the
+ * regular expression, the alias will be used to rewrite the import path.
+ */
+export interface PathRewriterRecord {
+  [alias: string]: RegExp | PathRewriterFn
 }
 
 /**
@@ -56,9 +56,18 @@ export const _rewriteImportPath: _RewriteFn = ({ importPath, sourceFilePath, rew
     return importPath
   }
 
-  for (const [alias, pattern] of Object.entries(rewriter)) {
-    if (pattern.test(importPath)) {
-      return importPath.replace(pattern, alias)
+  for (const [alias, patternOrRewriter] of Object.entries(rewriter)) {
+    if (typeof patternOrRewriter === 'function') {
+      const newImportPath = patternOrRewriter(importPath, sourceFilePath)
+      if (newImportPath) {
+        return newImportPath
+      }
+
+      return importPath
+    }
+
+    if (patternOrRewriter.test(importPath)) {
+      return importPath.replace(patternOrRewriter, alias)
     }
   }
 

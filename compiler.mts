@@ -9,6 +9,7 @@ import { constants, existsSync, readFileSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import ts from 'typescript'
+import { FileExtensionPatterns } from './formatter.mjs'
 import { TSPathTransformer } from './transformers.mjs'
 
 export function createTSNodeConfigHostParser() {
@@ -93,13 +94,15 @@ export function reportWatchStatusChanged(diagnostic: ts.Diagnostic) {
   console.info(ts.formatDiagnostic(diagnostic, formatHost))
 }
 
+/**
+ * Emits the result of the program with the transformer and formatter applied.
+ * This is a convenience wrapper around the TypeScript API and can be replaced
+ * with a custom implementation if needed.
+ */
+export type EmitWithTransformerFn = () => ts.EmitResult
+
 export type WithTransformerEmit<T> = T & {
-  /**
-   * Emits the result of the program with the transformer and formatter applied.
-   * This is a convenience wrapper around the TypeScript API and can be replaced
-   * with a custom implementation if needed.
-   */
-  emitWithTransformer: () => ts.EmitResult
+  emitWithTransformer: EmitWithTransformerFn
 }
 
 export interface SimpleProgramConfig {
@@ -107,24 +110,6 @@ export interface SimpleProgramConfig {
   transformer?: TSPathTransformer
   writeFileCallback?: ts.WriteFileCallback
 }
-
-/**
- * See `getSingleOutputFileNames` in `node_modules/typescript/lib/typescript.js`
- */
-export type OutputFileNameResult = readonly [
-  /** The output file name */
-  string,
-  /** The source map file name */
-  string,
-  /** The type declaration file name */
-  string
-]
-
-export type FileNameMap = Map<
-  /** The original source file name */
-  string,
-  OutputFileNameResult
->
 
 /**
  * Creates a file name mapping used to rewrite the output file names.
@@ -135,10 +120,22 @@ export function _createFileNameMap(tsConfig: ts.ParsedCommandLine, transformer?:
   if (!transformer) return fileNameRewriteMap
 
   for (const originalFileName of tsConfig.fileNames) {
+    const transformedFileName = transformer.rewriteFilePath(originalFileName)
+    const transformedToMJS = originalFileName.endsWith('.tsx') && transformedFileName.endsWith('.mjs')
+
     const outputNames = ts.getOutputFileNames(tsConfig, originalFileName, ts.sys.useCaseSensitiveFileNames)
 
     for (const outputName of outputNames) {
-      const rewrittenOutput = transformer.rewriteFilePath(outputName)
+      let rewrittenOutput = transformer.rewriteFilePath(outputName)
+
+      if (transformedToMJS) {
+        if (FileExtensionPatterns.TypeScriptDeclaration.test(outputName)) {
+          rewrittenOutput = rewrittenOutput.replace(FileExtensionPatterns.TypeScriptDeclaration, '.d.mts')
+        } else if (FileExtensionPatterns.JavaScript.test(outputName)) {
+          rewrittenOutput = rewrittenOutput.replace(FileExtensionPatterns.JavaScript, '.mjs')
+        }
+      }
+
       fileNameRewriteMap.set(outputName, rewrittenOutput)
     }
   }
@@ -158,14 +155,9 @@ export function createSimpleTSProgramWithWatcher({
   transformer,
   writeFileCallback = ts.sys.writeFile,
 }: SimpleProgramConfig) {
-  const compilerOptions: ts.CompilerOptions = {
-    ...tsConfig.options,
-    emitDeclarationOnly: false,
-  }
-
   const host = ts.createWatchCompilerHost(
     tsConfig.fileNames,
-    compilerOptions,
+    tsConfig.options,
     ts.sys,
     ts.createEmitAndSemanticDiagnosticsBuilderProgram,
     reportDiagnostic,
@@ -181,8 +173,9 @@ export function createSimpleTSProgramWithWatcher({
       undefined,
       (fileName, text, writeByteOrderMark) => {
         const nextFileName = fileNameRewriteMap.get(fileName) ?? fileName
+        const nextText = transformer ? transformer.rewriteFileText(fileName, text) : text
 
-        return writeFileCallback(nextFileName, text, writeByteOrderMark)
+        return writeFileCallback(nextFileName, nextText, writeByteOrderMark)
       },
       undefined,
       undefined,
@@ -209,35 +202,30 @@ export function createSimpleTSProgram({
   transformer,
   writeFileCallback = ts.sys.writeFile,
 }: SimpleProgramConfig) {
-  const compilerOptions: ts.CompilerOptions = {
-    ...tsConfig.options,
-    // As of TypeScript 5, we can only use module extensions in imports and exports,
-    // if the compiler option `emitDeclarationOnly` is set to `true`.
-    // So we turn it off for the duration of the emit...
-    emitDeclarationOnly: false,
-  }
-
   const program = ts.createProgram({
     host: ts.createCompilerHost(tsConfig.options, true),
-    options: compilerOptions,
+    options: tsConfig.options,
     rootNames: tsConfig.fileNames,
   })
 
   const fileNameRewriteMap = _createFileNameMap(tsConfig, transformer)
 
-  const mixedProgram: WithTransformerEmit<typeof program> = Object.assign(program, {
-    emitWithTransformer: () =>
-      program.emit(
-        undefined,
-        (fileName, text, writeByteOrderMark) => {
-          const nextFileName = fileNameRewriteMap.get(fileName) ?? fileName
+  const emitWithTransformer: EmitWithTransformerFn = () =>
+    program.emit(
+      undefined,
+      (fileName, text, writeByteOrderMark) => {
+        const nextFileName = fileNameRewriteMap.get(fileName) ?? fileName
+        const nextText = transformer ? transformer.rewriteFileText(fileName, text) : text
 
-          return writeFileCallback(nextFileName, text, writeByteOrderMark)
-        },
-        undefined,
-        undefined,
-        transformer?.asCustomTransformers()
-      ),
+        return writeFileCallback(nextFileName, nextText, writeByteOrderMark)
+      },
+      undefined,
+      undefined,
+      transformer?.asCustomTransformers()
+    )
+
+  const mixedProgram: WithTransformerEmit<typeof program> = Object.assign(program, {
+    emitWithTransformer,
   })
 
   return mixedProgram

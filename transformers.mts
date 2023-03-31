@@ -7,7 +7,35 @@
 
 import ts from 'typescript'
 import { PathRewriterFn, PathRewriterRecord, _rewriteImportPath } from './common.mts'
+import {
+  FileExtensionPatterns,
+  SourceMappingURLPattern,
+  createSourceMappingURL,
+  isJavaScriptMap,
+  isJavaScriptModuleMap,
+  isTypeScriptLike,
+} from './formatter.mjs'
 import { importExportVisitor } from './visitor.mts'
+
+/**
+ * Rewrites '.ts', '.mts', and '.tsx' files to '.mjs' files
+ * @internal
+ */
+export const simpleESMRewriter: PathRewriterFn = (importPath) => {
+  if (isJavaScriptMap(importPath)) {
+    return importPath.replace(FileExtensionPatterns.JavaScriptMap, '.mjs.map')
+  }
+
+  if (isJavaScriptModuleMap(importPath)) {
+    return importPath.replace(FileExtensionPatterns.JavaScriptModule, '.mjs.map')
+  }
+
+  if (isTypeScriptLike(importPath)) {
+    return importPath.replace(FileExtensionPatterns.TypeScriptLike, '.mjs')
+  }
+
+  return importPath
+}
 
 /**
  * AST Transformer to rewrite any imported or exported paths.
@@ -15,7 +43,7 @@ import { importExportVisitor } from './visitor.mts'
  * or to rewrite imports to a different file extension.
  */
 export class TSPathTransformer {
-  constructor(public rewriter: PathRewriterFn | PathRewriterRecord) {}
+  constructor(public rewriter: PathRewriterFn | PathRewriterRecord = simpleESMRewriter) {}
 
   /**
    * Rewrite a single file path.
@@ -76,6 +104,25 @@ export class TSPathTransformer {
     }
 
     return transformFactory
+  }
+
+  /**
+   * Rewrite the text of a single file.
+   *
+   * By default, this will rewrite the source map declaration to point to the new file name.
+   */
+  public rewriteFileText(fileName: string, text: string): string {
+    const match = text.match(SourceMappingURLPattern)
+
+    if (!match || !match.index) {
+      return text
+    }
+
+    const [, sourceMappingPath] = match
+    const nextSourceMappingPath = this.rewriteFilePath(sourceMappingPath)
+    const nextSourceMappingURL = createSourceMappingURL(nextSourceMappingPath)
+
+    return text.slice(0, match.index) + nextSourceMappingURL + text.slice(match.index + match[0].length)
   }
 
   public asCustomTransformers({
