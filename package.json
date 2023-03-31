@@ -1,6 +1,6 @@
 {
   "name": "@sister.software/typescript-esm-packager",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "A collection of tools to build ESM packages with TypeScript.",
   "repository": "git@github.com:sister-software/typescript-esm-packager.git",
   "homepage": "https://github.com/sister-software/typescript-esm-packager#readme",
