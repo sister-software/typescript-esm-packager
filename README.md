@@ -6,7 +6,7 @@ A collection of tools to build ESM packages with TypeScript.
 ![npm](https://img.shields.io/npm/dm/@sister.software/typescript-esm-packager)
 ![GitHub](https://img.shields.io/github/license/sister-software/typescript-esm-packager)
 
-- [Source Code](https://github.com/sister-software/@sister.software/typescript-esm-packager)
+- [Source Code](https://github.com/sister-software/typescript-esm-packager)
 
 ## Why would I need this?
 
