@@ -1,10 +1,10 @@
 {
-  "name": "@sister.software/ts-path-transformer",
+  "name": "@sister.software/typescript-esm-packager",
   "version": "1.2.3",
-  "description": "TypeScript AST Transformer to rewrite any imported or exported paths.",
+  "description": "A collection of tools to build ESM packages with TypeScript.",
   "repository": "git@github.com:sister-software/config.git",
   "bugs": {
-    "url": "https://github.com/sister-software/ts-path-transformer/issues"
+    "url": "https://github.com/sister-software/typescript-packager/issues"
   },
   "author": "Teffen Ellis <teffen@sister.software>",
   "license": "MIT",
@@ -24,6 +24,7 @@
     "module"
   ],
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "import": "./dist/mod.mjs",
       "types": "./dist/mod.d.mts"
@@ -35,8 +36,7 @@
     "./mod.mjs": {
       "import": "./dist/mod.mjs",
       "types": "./dist/mod.d.mts"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "type": "module",
   "scripts": {

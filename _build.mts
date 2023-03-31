@@ -17,7 +17,7 @@ import {
   createSimpleTSProgramWithWatcher,
   readParsedTSConfig,
   reportDiagnostic,
-} from './mod.mjs'
+} from './mod.mts'
 
 // ESM modules don't have __dirname, so we have to use import.meta.url...
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
