@@ -1,6 +1,6 @@
 {
   "name": "@sister.software/ts-path-transformer",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "TypeScript AST Transformer to rewrite any imported or exported paths.",
   "repository": "git@github.com:sister-software/config.git",
   "bugs": {
