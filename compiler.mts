@@ -142,13 +142,12 @@ export function _createFileNameMap(tsConfig: ts.ParsedCommandLine, transformer?:
       const outputNames = ts.getOutputFileNames(tsConfig, originalFileName, ts.sys.useCaseSensitiveFileNames)
 
       for (const outputName of outputNames) {
-        fileNameRewriteMap.set(
-          outputName,
-          outputName
-            //
-            .replace('.d.ts', '.d.mjs')
-            .replace('.js', '.mjs')
-        )
+        const rewrittenOutput = outputName
+          //
+          .replace('.d.ts', '.d.mts')
+          .replace('.js', '.mjs')
+
+        fileNameRewriteMap.set(outputName, rewrittenOutput)
       }
     }
   }
