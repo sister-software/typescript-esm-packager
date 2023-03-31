@@ -14,7 +14,7 @@
     "module": "ES2022",
     "allowImportingTsExtensions": true,
     "outDir": "./dist",
-    // "emitDeclarationOnly": true,
+    "emitDeclarationOnly": true,
     "moduleResolution": "bundler",
     "declaration": true,
     "baseUrl": ".",
